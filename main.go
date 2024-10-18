@@ -25,9 +25,20 @@ var (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: godev <path-to-your-go-file>")
+		fmt.Println("godev output: Usage: godev <path-to-your-go-file>")
 		os.Exit(1)
 	}
+
+	fmt.Println(`
+	 ██████╗  ██████╗ ██████╗ ███████╗██╗   ██╗
+	██╔════╝ ██╔═══██╗██╔══██╗██╔════╝██║   ██║
+	██║  ███╗██║   ██║██║  ██║█████╗  ██║   ██║
+	██║   ██║██║   ██║██║  ██║██╔══╝  ╚██╗ ██╔╝
+	╚██████╔╝╚██████╔╝██████╔╝███████╗ ╚████╔╝ 
+	 ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝  ╚═══╝  
+	                                           
+	Running in godev mode - Hot Reload Activated
+	`)
 
 	targetFile := os.Args[1]
 	dir, err := os.Getwd()
@@ -62,7 +73,7 @@ func main() {
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					if shouldReload(event.Name) {
-						fmt.Println("Modified file:", event.Name)
+						fmt.Println("godev output: Modified file:", event.Name)
 						debounceReload(targetFile)
 					}
 				}
@@ -88,8 +99,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Watching directory: %s\n", dir)
-	fmt.Printf("Building and running file: %s\n", targetFile)
+	fmt.Printf("godev output: Watching directory: %s\n", dir)
+	fmt.Printf("godev output: Building and running file: %s\n", targetFile)
 	buildAndRun(targetFile)
 
 	<-done
@@ -115,7 +126,7 @@ func debounceReload(file string) {
 func buildAndRun(file string) {
 	cleanup() // Remove previous build before rebuilding
 
-	fmt.Println("Building...")
+	fmt.Println("godev output: Building...")
 	buildCmd := exec.Command("go", "build", "-o", executableName, file)
 	buildCmd.Stderr = os.Stderr
 	err := buildCmd.Run()
@@ -124,17 +135,17 @@ func buildAndRun(file string) {
 		return
 	}
 
-	fmt.Println("Running...")
+	fmt.Println("godev output: Running...")
 	cmdMutex.Lock()
 	defer cmdMutex.Unlock()
 
 	// Terminate the previous process if it's still running
 	if cmd != nil && cmd.Process != nil {
-		fmt.Println("Terminating previous process...")
+		fmt.Println("godev output: Terminating previous process...")
 		if err := cmd.Process.Signal(os.Interrupt); err != nil {
-			fmt.Printf("Failed to interrupt process: %v\n", err)
+			fmt.Printf("godev output: Failed to interrupt process: %v\n", err)
 			if err := cmd.Process.Kill(); err != nil {
-				fmt.Printf("Failed to kill process: %v\n", err)
+				fmt.Printf("godev output: Failed to kill process: %v\n", err)
 			}
 		}
 		_, _ = cmd.Process.Wait()
@@ -145,7 +156,7 @@ func buildAndRun(file string) {
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
 	if err != nil {
-		fmt.Printf("Failed to start the program: %v\n", err)
+		fmt.Printf("godev output: Failed to start the program: %v\n", err)
 		return
 	}
 
@@ -153,12 +164,12 @@ func buildAndRun(file string) {
 		err := cmd.Wait()
 		if err != nil {
 			if err.Error() != "signal: interrupt" {
-				fmt.Printf("Program exited with error: %v\n", err)
+				fmt.Printf("godev output: Program exited with error: %v\n", err)
 			} else {
-				fmt.Println("Program terminated for rebuild")
+				fmt.Println("godev output: Program terminated for rebuild")
 			}
 		} else {
-			fmt.Println("Program exited successfully")
+			fmt.Println("godev output: Program exited successfully")
 		}
 	}()
 }
@@ -170,8 +181,8 @@ func cleanup() {
 
 	err := os.Remove(executableName)
 	if err != nil && !os.IsNotExist(err) {
-		fmt.Printf("Failed to remove executable: %v\n", err)
+		fmt.Printf("godev output: Failed to remove executable: %v\n", err)
 	} else if err == nil {
-		fmt.Printf("Removed executable: %s\n", executableName)
+		fmt.Printf("godev output: Removed executable: %s\n", executableName)
 	}
 }
