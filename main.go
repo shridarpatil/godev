@@ -5,9 +5,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
-	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -19,6 +20,7 @@ var (
 	debounceInterval  = 100 * time.Millisecond
 	cmd               *exec.Cmd
 	cmdMutex          sync.Mutex
+	executableName    string
 )
 
 func main() {
@@ -32,6 +34,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	executableName = "godev"
+
+	// Set up clean up on interrupt
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(0)
+	}()
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -100,8 +113,10 @@ func debounceReload(file string) {
 }
 
 func buildAndRun(file string) {
+	cleanup() // Remove previous build before rebuilding
+
 	fmt.Println("Building...")
-	buildCmd := exec.Command("go", "build", file)
+	buildCmd := exec.Command("go", "build", "-o", executableName, file)
 	buildCmd.Stderr = os.Stderr
 	err := buildCmd.Run()
 	if err != nil {
@@ -125,8 +140,7 @@ func buildAndRun(file string) {
 		_, _ = cmd.Process.Wait()
 	}
 
-	execName := strings.TrimSuffix(filepath.Base(file), ".go")
-	cmd = exec.Command("./" + execName)
+	cmd = exec.Command("./" + executableName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
@@ -147,4 +161,17 @@ func buildAndRun(file string) {
 			fmt.Println("Program exited successfully")
 		}
 	}()
+}
+
+func cleanup() {
+	if executableName == "" {
+		return
+	}
+
+	err := os.Remove(executableName)
+	if err != nil && !os.IsNotExist(err) {
+		fmt.Printf("Failed to remove executable: %v\n", err)
+	} else if err == nil {
+		fmt.Printf("Removed executable: %s\n", executableName)
+	}
 }
