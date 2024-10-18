@@ -1,3 +1,13 @@
+```
+                 ██████╗  ██████╗ ██████╗ ███████╗██╗   ██╗
+                ██╔════╝ ██╔═══██╗██╔══██╗██╔════╝██║   ██║
+                ██║  ███╗██║   ██║██║  ██║█████╗  ██║   ██║
+                ██║   ██║██║   ██║██║  ██║██╔══╝  ╚██╗ ██╔╝
+                ╚██████╔╝╚██████╔╝██████╔╝███████╗ ╚████╔╝ 
+                 ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝  ╚═══╝  
+                                           
+                Running in godev mode - Hot Reload Activated
+```
 # godev: Go Development Hot-Reload Tool
 
 `godev` is a command-line tool designed to streamline Go development by providing hot-reload functionality. It watches your project directory for changes in Go, HTML, CSS, and JavaScript files, automatically rebuilding and rerunning your Go application when changes are detected.
